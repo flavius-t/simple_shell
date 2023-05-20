@@ -55,12 +55,13 @@ void strip_whitespace(char* str) {
 int main(int argc, char* argv[]) {
     // check if interactive or batch mode
     if (argc == 1) {
+        char* line = NULL;
+        size_t line_size = 0;
+
         while (1) {
             printf("wish> ");
 
             // read line
-            char* line = NULL;
-            size_t line_size = 0;
             getline(&line, &line_size, stdin);
 
             // parse line: clean and process args
@@ -73,9 +74,6 @@ int main(int argc, char* argv[]) {
             }
 
             execute_cmd(line);
-
-            // getline allocates new dynamic memory block for each new input
-            free(line);
         }
     } else if (argc == 2) {
         printf("Running batch mode with script: %s\n", argv[1]);
