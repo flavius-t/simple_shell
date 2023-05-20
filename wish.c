@@ -28,6 +28,7 @@ void execute_cmd(char* cmd) {
         char* argv[] = { path, cmd, NULL };
 
         execv(path, argv);
+
     } else {
         int wc = wait(NULL);
         printf("hello, I am parent of %d (rc_wait:%d) (pid:%d)\n", rc, wc, (int) getpid());
@@ -66,10 +67,15 @@ int main(int argc, char* argv[]) {
             strip_whitespace(line);
 
             if (exit_check(line)) {
+                free(line);
+                line = NULL;
                 break;
             }
 
             execute_cmd(line);
+
+            // getline allocates new dynamic memory block for each new input
+            free(line);
         }
     } else if (argc == 2) {
         printf("Running batch mode with script: %s\n", argv[1]);
