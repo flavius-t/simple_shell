@@ -17,7 +17,60 @@ int exit_check(char* line) {
 }
 
 
-void execute_input(char** tokens) {
+char* get_full_path(char* path, char* command) {
+    size_t path_len = strlen(path);
+    size_t command_len = strlen(command);
+
+    // need enough room for both strings, plus a slash and a null terminator
+    char* full_path = (char*)malloc((path_len + command_len + 2) * sizeof(char));
+
+    if (!full_path) {
+        fprintf(stderr, "get_exec_path -- malloc failed\n");
+        return NULL;
+    }
+
+    strcpy(full_path, path);
+    strcat(full_path, "/");
+    strcat(full_path, command);
+
+    printf("full path: %s\n", full_path);
+
+    return full_path;
+}
+
+
+int is_executable(char* full_path) {
+    if (full_path && access(full_path, X_OK) == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+
+char* get_exec_path(char** paths, char** tokens) {
+    char* full_path = NULL;
+
+    for (size_t i = 0; paths[i] != NULL; i++) {
+        full_path = get_full_path(paths[i], tokens[0]);
+
+        if (full_path && is_executable(full_path)) {
+            printf("found executable: %s\n", paths[i]);
+
+            break;
+        }
+    }
+
+    return full_path;
+}
+
+
+void execute_input(char* path, char** tokens) {
+    if (!path) {
+        fprintf(stderr, "execute_input -- no executable path\n");
+        return;
+    }
+
     int rc = fork();
     if (rc < 0) {
         fprintf(stderr, "fork failed\n");
@@ -25,9 +78,9 @@ void execute_input(char** tokens) {
     } else if (rc == 0) {
         printf("hello, I am child (pid:%d)\n", (int) getpid());
 
-        execv(tokens[0], tokens);
+        execv(path, tokens);
 
-        fprintf(stderr, "failed to execute command\n");
+        fprintf(stderr, "child_process failed to execute command\n");
         exit(1);
 
     } else {
@@ -98,6 +151,8 @@ void free_tokens(char** tokens) {
 
 
 int main(int argc, char* argv[]) {
+    char* paths[] = {"/bin", "usr/bin", NULL};
+
     // check if interactive or batch mode
     if (argc == 1) {
         char* line = NULL;
@@ -118,7 +173,21 @@ int main(int argc, char* argv[]) {
 
             char** tokens = tokenize(line);
 
-            execute_input(tokens);
+            if (!tokens) {
+                fprintf(stderr, "execute_input -- no tokens\n");
+                break;
+            }
+
+            char* exec_path = get_exec_path(paths, tokens);
+
+            if (!exec_path) {
+                fprintf(stderr, "execute_input -- no executable found\n");
+                break;
+            }
+
+            execute_input(exec_path, tokens);
+
+            free(exec_path);
 
             free_tokens(tokens);
         }
