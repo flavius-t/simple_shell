@@ -41,7 +41,13 @@ void execute_input(char* path, char** tokens) {
     }
 }
 
-
+/*
+    * Gets and processes user input in either interactive or batch mode.
+    * 
+    * Parameters:
+    *   stream: stdin for interactive mode, file pointer for batch mode
+    *   paths: array of paths to search for executables
+*/
 void process_input(FILE* stream, char** paths) {
     char* input = NULL;
     size_t input_size = 0;
