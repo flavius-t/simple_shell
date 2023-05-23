@@ -4,7 +4,7 @@ A project to explore the use of processes by implementing a simple user shell. T
 
 ## Compilation
 
-A makefile has been included to simplify compilation. Simply type following prompt:
+A makefile has been included to simplify compilation. Simply type the following prompt:
 
 ```
 prompt> make
@@ -24,6 +24,12 @@ To run the executable in Batch mode:
 
 ```
 prompt> ./wish "filepath"
+```
+
+Note, when in Interactive mode, the shell may be exited by typing:
+
+```
+prompt> exit
 ```
 
 ## Usage and Examples
