@@ -35,11 +35,44 @@ void execute_input(char* path, char** tokens) {
 
         fprintf(stderr, "child process failed to execute command\n");
         exit(1);
-
     } else {
         int wc = wait(NULL);
         printf("Parent process (pid:%d): finished waiting for child process %d (rc_wait:%d) \n", (int)getpid(), rc, wc);
     }
+}
+
+
+void process_input(FILE* stream, char** paths) {
+    char* input = NULL;
+    size_t input_size = 0;
+
+    while (1) {
+        if (stream == stdin) {
+            printf("wish> ");
+        }
+
+        int done = getline(&input, &input_size, stream);
+        strip_whitespace(input);
+
+        if (done == -1 || exit_check(input)) {
+            break;
+        }
+
+        char** tokens = tokenize(input);
+        if (!tokens) {
+            fprintf(stderr, "failed to tokenize user input\n");
+            continue;
+        }
+
+        char* exec_path = get_exec_path(paths, tokens[0]);
+        execute_input(exec_path, tokens);
+
+        free(exec_path);
+        free_tokens(tokens);
+    }
+
+    free(input);
+    input = NULL;
 }
 
 
@@ -49,44 +82,27 @@ int main(int argc, char* argv[]) {
 
     if (argc == 1) {
         // interactive mode
-        char* input = NULL;
-        size_t input_size = 0;
-
-        while (1) {
-            printf("wish> ");
-
-            getline(&input, &input_size, stdin);
-            strip_whitespace(input);
-
-            if (exit_check(input)) {
-                free(input);
-                input = NULL;
-                break;
-            }
-
-            char** tokens = tokenize(input);
-            if (!tokens) {
-                fprintf(stderr, "failed to tokenize user input\n");
-                continue;
-            }
-
-            char* exec_path = get_exec_path(paths, tokens[0]);
-            execute_input(exec_path, tokens);
-
-            free(exec_path);
-            free_tokens(tokens);
-        }
+        process_input(stdin, paths);
     } else if (argc == 2) {
         // batch mode
+        char* filename = argv[1];
+        strip_whitespace(filename);
+        FILE* fp = fopen(filename, "r");
+        if (!fp) {
+            fprintf(stderr, "failed to open file %s\n", filename);
+            return 1;
+        }
 
-        // clean user input (filename); strip whitespace
+        process_input(fp, paths);
 
-        // open file
-
-        // read file input-by-input; strip whitespace; tokenize; execute sequentially
+        fclose(fp);
+        fp = NULL;
+        filename = NULL;
     } else {
         printf("Illegal number of args to wish\n");
     }
+
+    // TODO: clean up pointers in paths array
 
     return 0;
 }
