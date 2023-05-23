@@ -102,7 +102,9 @@ int main(int argc, char* argv[]) {
         printf("Illegal number of args to wish\n");
     }
 
-    // TODO: clean up pointers in paths array
+    for (int i = 0; paths[i] != NULL; i++) {
+        paths[i] = NULL;
+    }
 
     return 0;
 }
