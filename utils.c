@@ -2,6 +2,15 @@
 #include "constants.h"
 
 
+int exit_check(char* input) {
+    if (input[0] == 'e' && input[1] == 'x' && input[2] == 'i' && input[3] == 't') {
+        return 1;
+    }
+
+    return 0;
+}
+
+
 void strip_whitespace(char* str) {
     // remove leading whitespace
     while (isspace(*str)) {
@@ -57,12 +66,12 @@ void free_tokens(char** tokens) {
 }
 
 
-char* get_full_path(char* path, char* command) {
+char* get_full_path(char* path, char* cmd) {
     size_t path_len = strlen(path);
-    size_t command_len = strlen(command);
+    size_t cmd_len = strlen(cmd);
 
     // need enough room for both strings, plus a slash and a null terminator
-    char* full_path = (char*)malloc((path_len + command_len + 2) * sizeof(char));
+    char* full_path = (char*)malloc((path_len + cmd_len + 2) * sizeof(char));
 
     if (!full_path) {
         fprintf(stderr, "get_exec_path -- malloc failed\n");
@@ -71,7 +80,7 @@ char* get_full_path(char* path, char* command) {
 
     strcpy(full_path, path);
     strcat(full_path, "/");
-    strcat(full_path, command);
+    strcat(full_path, cmd);
 
     printf("full path: %s\n", full_path);
 
@@ -88,15 +97,13 @@ int is_executable(char* full_path) {
 }
 
 
-char* get_exec_path(char** paths, char** tokens) {
+char* get_exec_path(char** paths, char* cmd) {
     char* full_path = NULL;
 
     for (size_t i = 0; paths[i] != NULL; i++) {
-        full_path = get_full_path(paths[i], tokens[0]);
+        full_path = get_full_path(paths[i], cmd);
 
         if (full_path && is_executable(full_path)) {
-            printf("found executable: %s\n", paths[i]);
-
             break;
         }
     }

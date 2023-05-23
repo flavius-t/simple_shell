@@ -5,86 +5,85 @@
 #include "utils.h"
 
 
-int exit_check(char* line) {
-    if (line[0] == 'e' && line[1] == 'x' && line[2] == 'i' && line[3] == 't') {
-        return 1;
-    }
-
-    return 0;
-}
-
-
+/*
+    * Executes a command in a separate process.
+    * 
+    * Parameters:
+    *    path: full path to executable, i.e. /usr/bin/ls
+    *    tokens: array of string tokens, where the first token is the command and the rest are args
+    *            for example, {"ls", "-l", NULL}
+*/
 void execute_input(char* path, char** tokens) {
     if (!path) {
-        fprintf(stderr, "execute_input -- no executable path\n");
+        fprintf(stderr, "execute_input: no executable path provided\n");
+        return;
+    }
+
+    if (!tokens) {
+        fprintf(stderr, "execute_input: no tokens provided\n");
         return;
     }
 
     int rc = fork();
     if (rc < 0) {
-        fprintf(stderr, "fork failed\n");
+        fprintf(stderr, "failed to fork new process\n");
         return;
     } else if (rc == 0) {
-        printf("hello, I am child (pid:%d)\n", (int) getpid());
+        printf("starting child process: (pid:%d)\n", (int)getpid());
 
         execv(path, tokens);
 
-        fprintf(stderr, "child_process failed to execute command\n");
+        fprintf(stderr, "child process failed to execute command\n");
         exit(1);
 
     } else {
         int wc = wait(NULL);
-        printf("hello, I am parent of %d (rc_wait:%d) (pid:%d)\n", rc, wc, (int) getpid());
+        printf("Parent process (pid:%d): finished waiting for child process %d (rc_wait:%d) \n", (int)getpid(), rc, wc);
     }
 }
 
 
 int main(int argc, char* argv[]) {
+    // executable search paths
     char* paths[] = {"/bin", "usr/bin", NULL};
 
-    // check if interactive or batch mode
     if (argc == 1) {
-        char* line = NULL;
-        size_t line_size = 0;
+        // interactive mode
+        char* input = NULL;
+        size_t input_size = 0;
 
         while (1) {
             printf("wish> ");
 
-            getline(&line, &line_size, stdin);
+            getline(&input, &input_size, stdin);
+            strip_whitespace(input);
 
-            strip_whitespace(line);
-
-            if (exit_check(line)) {
-                free(line);
-                line = NULL;
+            if (exit_check(input)) {
+                free(input);
+                input = NULL;
                 break;
             }
 
-            char** tokens = tokenize(line);
-
+            char** tokens = tokenize(input);
             if (!tokens) {
-                fprintf(stderr, "execute_input -- no tokens\n");
-                break;
+                fprintf(stderr, "failed to tokenize user input\n");
+                continue;
             }
 
-            char* exec_path = get_exec_path(paths, tokens);
-
-            if (!exec_path) {
-                fprintf(stderr, "execute_input -- no executable found\n");
-                break;
-            }
-
+            char* exec_path = get_exec_path(paths, tokens[0]);
             execute_input(exec_path, tokens);
 
             free(exec_path);
-
             free_tokens(tokens);
         }
     } else if (argc == 2) {
-        printf("Running batch mode with script: %s\n", argv[1]);
-        // clean and process args
+        // batch mode
 
-        // run each arg sequentially (not concurrently) in a new process
+        // clean user input (filename); strip whitespace
+
+        // open file
+
+        // read file input-by-input; strip whitespace; tokenize; execute sequentially
     } else {
         printf("Illegal number of args to wish\n");
     }
