@@ -5,6 +5,9 @@
 #include <ctype.h>
 
 
+#define MAX_TOKENS 64
+
+
 /*
     * Checks if user wishes to exit interactive mode.
     *

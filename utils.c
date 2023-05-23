@@ -1,5 +1,4 @@
 #include "utils.h"
-#include "constants.h"
 
 
 int exit_check(char* input) {
